@@ -2,6 +2,8 @@ package sf.mifi.grechko.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sf.mifi.grechko.models.User;
@@ -89,5 +91,25 @@ public class UserService {
 
         user.setPasswdHash(passwordService.hashPassword(newPassword));
         userRepository.save(user);
+    }
+
+    public User getCurrentUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            String username = ((UserDetails) principal).getUsername();
+            return userRepository.findByLogin(username)
+                    .orElseThrow(() -> new IllegalStateException("Пользователь не найден: " + username));
+        }
+
+        throw new IllegalStateException("Пользователь не аутентифицирован");
+    }
+
+    public Integer getCurrentUserId() {
+        return getCurrentUser().getId();
+    }
+
+    public String getCurrentUserLogin() {
+        return getCurrentUser().getLogin();
     }
 }

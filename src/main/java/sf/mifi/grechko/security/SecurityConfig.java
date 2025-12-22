@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import sf.mifi.grechko.repositories.UserRepository;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -62,6 +63,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/profiles/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .authenticationProvider(authenticationProvider())

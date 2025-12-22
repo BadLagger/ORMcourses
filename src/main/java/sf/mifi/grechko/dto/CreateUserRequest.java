@@ -1,6 +1,7 @@
 package sf.mifi.grechko.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import sf.mifi.grechko.models.User;
 
@@ -12,6 +13,6 @@ public class CreateUserRequest {
     @NotBlank(message = "Пароль не может быть пустым")
     private String password;
 
-    @NotBlank(message = "Роль не может быть пустым")
+    @NotNull(message = "Роль должна быть указана")
     private User.Role role;
 }

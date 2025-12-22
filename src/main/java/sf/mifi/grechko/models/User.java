@@ -1,5 +1,6 @@
 package sf.mifi.grechko.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,6 +26,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore  // Чтобы не было циклической ссылки в JSON
+    private Profile profile;
 
     public enum Role {
         ADMIN, USER, TEACHER

@@ -1,6 +1,7 @@
 package sf.mifi.grechko.integration.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +29,13 @@ public class UserControllerIntegrationTest extends BaseTest {
     private TestRestTemplate template;
 
     private final String TestUsernameRoleUser="testuser";
-    private final String TestPasswordRoleUser="testuser123";
+    private static String TestPasswordRoleUser="testuser123";
+    private final String TestUsernameRoleTeacher="testteacher";
+    private final String TestPasswordRoleTeacher="testteacher123";
     private final String AdminUsername="admin";
     private final String AdminPassword="admin123";
+
+    private static Integer testId;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -54,7 +59,7 @@ public class UserControllerIntegrationTest extends BaseTest {
 
     @Test
     @Order(2)
-    @DisplayName("1. GET /api/users - получение всех пользователей без авторизации (ошибка 401)")
+    @DisplayName("2. GET /api/users - получение всех пользователей без авторизации (ошибка 401)")
     void getAllUsers_WithoutAuthorization_ShouldReturnUnauthorized() {
         // Пытаемся получить доступ список пользователей без логина и пароля
         ResponseEntity<String> response = executeGet("/api/users", String.class,
@@ -65,21 +70,120 @@ public class UserControllerIntegrationTest extends BaseTest {
 
     @Test
     @Order(3)
-    @DisplayName("1. POST /api/users - создание нового пользователя USER (админ)")
+    @DisplayName("3. POST /api/users - создание нового пользователя USER (админ)")
     void postCreateUser_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
         // Запрос
         Map<String, Object> userRequest = Map.of(
-                "username", TestUsernameRoleUser,
+                "login", TestUsernameRoleUser,
                 "password", TestPasswordRoleUser,
                 "role", "USER"
         );
-        String requestBody = objectMapper.writeValueAsString(userRequest);
 
-        ResponseEntity<String> response = executePost("/api/users", requestBody,
+        ResponseEntity<String> response = executePost("/api/users", userRequest,
                 String.class, AdminUsername, AdminPassword);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        assertThat(responseBody.get("login").toString()).isEqualTo(TestUsernameRoleUser);
+        assertThat(responseBody.get("role").toString()).isEqualTo("USER");
+
+        // Запомнить ID для следующего теста
+        testId = Integer.valueOf(responseBody.get("id").toString());
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("4. POST /api/users - создание нового пользователя TEACHER (от имени пользователя, ошибка 403)")
+    void postCreateUser_UserAccess_ShouldReturnForbidden() throws JsonProcessingException {
+        // Запрос
+        Map<String, Object> userRequest = Map.of(
+                "login", TestUsernameRoleTeacher,
+                "password", TestPasswordRoleTeacher,
+                "role", "TEACHER"
+        );
+
+        ResponseEntity<String> response = executePost("/api/users", userRequest,
+                String.class, TestUsernameRoleUser, TestPasswordRoleUser);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("5. PUT /api/users/{id}/role - изменить роль пользователя на TEACHER (админ)")
+    void putChangeUser_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
+        // Запрос
+        String url = String.format("/api/users/%d/role?role=TEACHER", testId);
+
+        ResponseEntity<String> response = executePut(url, String.class, AdminUsername, AdminPassword);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        assertThat(responseBody.get("role").toString()).isEqualTo("TEACHER");
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("6. PUT /api/users/{id}/role - изменить роль пользователя на USER (от имени пользователя, ошибка 403)")
+    void putChangeUser_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
+        // Запрос
+        String url = String.format("/api/users/%d/role?role=USER", testId);
+        ResponseEntity<String> response = executePut(url, String.class, TestUsernameRoleUser, TestPasswordRoleUser);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("7. POST /api/users/{id}/change-password - изменение пароля пользователя TEACHER (админ)")
+    void postChangePassword_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
+        String newPassword = "new_pass";
+        String url = String.format("/api/users/%d/change-password", testId);
+        // Запрос
+        Map<String, Object> userRequest = Map.of(
+                "currentPassword", TestPasswordRoleUser,
+                "newPassword", newPassword
+        );
+
+        ResponseEntity<String> response = executePost(url, userRequest,
+                String.class, AdminUsername, AdminPassword);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        TestPasswordRoleUser = newPassword;
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("8. POST /api/users/{id}/change-password - изменение пароля пользователя TEACHER (от имени пользователя, ошибка 403)")
+    void postChangePassword_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
+        String url = String.format("/api/users/%d/change-password", testId);
+        // Запрос
+        Map<String, Object> userRequest = Map.of(
+                "currentPassword", TestPasswordRoleUser,
+                "newPassword", "testpass"
+        );
+
+        ResponseEntity<String> response = executePost(url, userRequest,
+                String.class, TestUsernameRoleUser, TestPasswordRoleUser);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
 
+    @Test
+    @Order(9)
+    @DisplayName("9. DELETE /api/users/{id} - удаление пользователя пользователя TEACHER (от имени пользователя, ошибка 403)")
+    void deleteUser_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
+        String url = String.format("/api/users/%d", testId);
+        ResponseEntity<String> response = executeDelete(url,String.class, TestUsernameRoleUser, TestPasswordRoleUser);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("10. DELETE /api/users/{id} - удаление пользователя пользователя TEACHER (админ)")
+    void deleteUser_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
+        String url = String.format("/api/users/%d", testId);
+        ResponseEntity<String> response = executeDelete(url,String.class, AdminUsername, AdminPassword);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
 }

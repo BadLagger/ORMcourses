@@ -54,6 +54,12 @@ public abstract class BaseTest {
         return restTemplate.exchange(baseUrl + url, HttpMethod.PUT, request, responseType);
     }
 
+    protected <T, R> ResponseEntity<T> executePut(String url, R body, Class<T> responseType,
+                                                  String username, String password) {
+        HttpEntity<R> request = new HttpEntity<>(body, getHeader(username, password, new ContentType(true, "application/json")));
+        return restTemplate.exchange(baseUrl + url, HttpMethod.PUT, request, responseType);
+    }
+
     protected <T, R> ResponseEntity<T> executeDelete(String url, Class<T> responseType, String username, String password) {
         HttpHeaders headers = createHeaders(username, password, null);
         HttpEntity<R> request = new HttpEntity<>(headers);

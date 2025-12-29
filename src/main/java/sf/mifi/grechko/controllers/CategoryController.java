@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sf.mifi.grechko.dto.CategoryDto;
 import sf.mifi.grechko.dto.CreateCategoryRequest;
+import sf.mifi.grechko.dto.UpdateCategoryRequest;
 import sf.mifi.grechko.services.CategoryService;
 
 import java.util.List;

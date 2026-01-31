@@ -30,9 +30,9 @@ public class UserController {
 
     @PostMapping
     @Operation(summary = "Создать нового пользователя (только для ADMIN)")
-    public ResponseEntity<User> createUser(
+    public ResponseEntity<UserDto> createUser(
             @Valid @RequestBody CreateUserRequest request) {
-        User user = userService.createUser(
+        UserDto user = userService.createUser(
                 request.getLogin(),
                 request.getPassword(),
                 request.getRole()
@@ -49,14 +49,14 @@ public class UserController {
 
     @PutMapping("/{id}/role")
     @Operation(summary = "Изменить роль пользователя (только для ADMIN)")
-    public ResponseEntity<User> updateUserRole(
+    public ResponseEntity<UserDto> updateUserRole(
             @PathVariable Long id,
             @RequestParam User.Role role) {
         return ResponseEntity.ok(userService.updateUserRole(id, role));
     }
 
-    @PostMapping("/{id}/change-password")
-    @Operation(summary = "Изменить пароль пользователя")
+    @PutMapping("/{id}/change-password")
+    @Operation(summary = "Изменить пароль пользователя (только для ADMIN)")
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,
             @Valid @RequestBody ChangePasswordRequest request) {

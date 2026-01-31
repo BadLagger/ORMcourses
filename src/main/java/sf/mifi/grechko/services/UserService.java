@@ -22,7 +22,7 @@ public class UserService {
     private final PasswordService passwordService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    public User createUser(String login, String plainPassword, User.Role role) {
+    public UserDto createUser(String login, String plainPassword, User.Role role) {
         if (userRepository.existsByLogin(login)) {
             throw new IllegalArgumentException("Пользователь с логином '" + login + "' уже существует");
         }
@@ -32,7 +32,7 @@ public class UserService {
         user.setPasswdHash(passwordService.hashPassword(plainPassword));
         user.setRole(role);
 
-        return userRepository.save(user);
+        return convertUserToDto(userRepository.save(user));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -67,7 +67,7 @@ public class UserService {
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public User updateUserRole(Long userId, User.Role newRole) {
+    public UserDto updateUserRole(Long userId, User.Role newRole) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
@@ -80,7 +80,7 @@ public class UserService {
         }
 
         user.setRole(newRole);
-        return userRepository.save(user);
+        return convertUserToDto(userRepository.save(user));
     }
 
     @PreAuthorize("isAuthenticated()")

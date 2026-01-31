@@ -6,11 +6,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sf.mifi.grechko.dto.UserDto;
 import sf.mifi.grechko.models.User;
 import sf.mifi.grechko.repositories.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,8 +53,11 @@ public class UserService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::convertUserToDto)
+                .collect(Collectors.toList());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -111,5 +116,13 @@ public class UserService {
 
     public String getCurrentUserLogin() {
         return getCurrentUser().getLogin();
+    }
+
+    private UserDto convertUserToDto(User user) {
+        return UserDto.builder()
+                .id(user.getId())
+                .login(user.getLogin())
+                .role(user.getRole())
+                .build();
     }
 }

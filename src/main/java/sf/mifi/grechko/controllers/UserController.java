@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import sf.mifi.grechko.dto.UserDto;
 import sf.mifi.grechko.models.User;
 import sf.mifi.grechko.services.UserService;
 import sf.mifi.grechko.dto.CreateUserRequest;
@@ -23,7 +24,7 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "Получить всех пользователей (только для ADMIN)")
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 

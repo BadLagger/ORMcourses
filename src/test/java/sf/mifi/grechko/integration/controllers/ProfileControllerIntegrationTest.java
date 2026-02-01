@@ -27,17 +27,10 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     @Autowired
     private TestRestTemplate template;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private final String AdminUsername="admin";
-    private final String AdminPassword="admin123";
     private final String TestBioInfo="Test Bio Info";
     private final String TestAvatarUrl="http://test.avatar.url";
     private final String TestEmail="test@avatar.url";
     private final String TestEmail2="test2@avatar.url";
-
-    private final String TestUsernameRoleTeacher="testteacher";
-    private final String TestPasswordRoleTeacher="testteacher123";
 
     private static Integer testId;
 
@@ -87,8 +80,8 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     void postCreateUser_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
         // Запрос
         Map<String, Object> userRequest = Map.of(
-                "login", TestUsernameRoleTeacher,
-                "password", TestPasswordRoleTeacher,
+                "login", TeacherUsername,
+                "password", TeacherPassword,
                 "role", "TEACHER"
         );
 
@@ -97,7 +90,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
-        assertThat(responseBody.get("login").toString()).isEqualTo(TestUsernameRoleTeacher);
+        assertThat(responseBody.get("login").toString()).isEqualTo(TeacherUsername);
         assertThat(responseBody.get("role").toString()).isEqualTo("TEACHER");
 
         // Запомнить ID для следующего теста
@@ -118,7 +111,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
 
         // Админ получает список пользователей
         ResponseEntity<String> response = executePut("/api/profiles/me", userRequest, String.class,
-                TestUsernameRoleTeacher, TestPasswordRoleTeacher);
+                TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -137,7 +130,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
 
         // Админ получает список пользователей
         ResponseEntity<String> response = executePut("/api/profiles/me", userRequest, String.class,
-                TestUsernameRoleTeacher, TestPasswordRoleTeacher);
+                TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -148,7 +141,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     void getProfile_TeacherAccess_ShouldReturnOk() throws JsonProcessingException {
 
         ResponseEntity<String> response = executeGet("/api/profiles/me", String.class,
-                TestUsernameRoleTeacher, TestPasswordRoleTeacher);
+                TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
@@ -165,7 +158,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
         System.out.printf("Test ID: %d%n", testId);
         String url = String.format("/api/profiles/user/%d", testId);
         ResponseEntity<String> response = executeGet(url, String.class,
-                TestUsernameRoleTeacher, TestPasswordRoleTeacher);
+                TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -201,7 +194,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
 
         // Админ получает список пользователей
         ResponseEntity<String> response = executePut(url, userRequest, String.class,
-                TestUsernameRoleTeacher, TestPasswordRoleTeacher);
+                TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }

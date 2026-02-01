@@ -63,7 +63,12 @@ public class CourseController {
     @GetMapping("/my")
     @Operation(summary = "Получить мои курсы (только TEACHER)")
     public ResponseEntity<List<CourseDto>> getMyCourses() {
-        return ResponseEntity.ok(courseService.getMyCourses());
+        try {
+            var result = courseService.getMyCourses();
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping

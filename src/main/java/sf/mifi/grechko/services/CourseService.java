@@ -189,9 +189,15 @@ public class CourseService {
      */
     @Transactional(readOnly = true)
     public List<CourseDto> getCoursesByTeacher(Integer teacherId) {
-        return courseRepository.findByTeacherId(teacherId).stream()
+
+        var result = courseRepository.findByTeacherId(teacherId).stream()
                 .map(CourseDto::fromEntity)
                 .toList();
+
+        if (!result.isEmpty())
+            return result;
+        else
+            throw new IllegalArgumentException("Нет курсов с таким учителем");
     }
 
     /**
@@ -199,9 +205,15 @@ public class CourseService {
      */
     @Transactional(readOnly = true)
     public List<CourseDto> getCoursesByCategory(Integer categoryId) {
-        return courseRepository.findByCategoryId(categoryId).stream()
+
+        var result = courseRepository.findByCategoryId(categoryId).stream()
                 .map(CourseDto::fromEntity)
                 .toList();
+
+        if (!result.isEmpty())
+            return result;
+        else
+            throw new IllegalArgumentException("Нет курсов с такой категорией");
     }
 
     /**
@@ -214,8 +226,13 @@ public class CourseService {
             throw new AccessDeniedException("Только преподаватели могут просматривать свои курсы");
         }
 
-        return courseRepository.findByTeacherId(currentUser.getId()).stream()
+        var result = courseRepository.findByTeacherId(currentUser.getId()).stream()
                 .map(CourseDto::fromEntity)
                 .toList();
+
+        if (!result.isEmpty())
+            return result;
+        else
+            throw new IllegalArgumentException("У учителя нет курсов");
     }
 }

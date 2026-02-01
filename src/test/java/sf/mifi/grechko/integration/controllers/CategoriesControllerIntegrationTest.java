@@ -8,9 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import sf.mifi.grechko.BaseTest;
@@ -25,16 +23,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CategoriesControllerIntegrationTest extends BaseTest {
 
-    private static final String BASE_HOST_URL = "http://localhost:";
-
-    private static final String AdminUsername="admin";
-    private static final String AdminPassword="admin123";
-    private static final String TeacherUsername="teacher";
-    private static final String TeacherPassword="teacher123";
-    private static final String UserUsername="user";
-    private static final String UserPassword="user123";
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private static Integer testId;
 
 
@@ -48,37 +36,13 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
         }
     }
 
-    private static boolean createTestUsersViaApi(TestRestTemplate restTemplate, int port) {
-        Map<String, Object> teacherRequest = Map.of(
-                "login", TeacherUsername,
-                "password", TeacherPassword,
-                "role", "TEACHER"
-        );
-
-        Map<String, Object> userRequest = Map.of(
-                "login", UserUsername,
-                "password", UserPassword,
-                "role", "USER"
-        );
-
-        try {
-            ResponseEntity<String> response = executePost("/api/users", teacherRequest,
-                    String.class, AdminUsername, AdminPassword);
-            if (response.getStatusCode() != HttpStatus.OK) {
-                return false;
-            }
-            response = executePost("/api/users", userRequest,
-                    String.class, AdminUsername, AdminPassword);
-
-            if (response.getStatusCode() != HttpStatus.OK) {
-                return false;
-            }
-
-        } catch (Exception exp) {
-            return false;
+    @AfterAll
+    static void cleanUp() {
+        if (!deleteTestUsersViaApi()) {
+            throw new IllegalStateException("Failed to clean up test users. API may be unavailable.");
         }
-        return true;
     }
+
 
     @Test
     @Order(23)

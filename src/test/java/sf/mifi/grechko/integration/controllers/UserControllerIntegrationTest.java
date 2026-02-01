@@ -28,16 +28,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     @Autowired
     private TestRestTemplate template;
 
-    private final String TestUsernameRoleUser="testuser";
-    private static String TestPasswordRoleUser="testuser123";
-    private final String TestUsernameRoleTeacher="testteacher";
-    private final String TestPasswordRoleTeacher="testteacher123";
-    private final String AdminUsername="admin";
-    private final String AdminPassword="admin123";
-
     private static Integer testId;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -74,8 +65,8 @@ public class UserControllerIntegrationTest extends BaseTest {
     void postCreateUser_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
         // Запрос
         Map<String, Object> userRequest = Map.of(
-                "login", TestUsernameRoleUser,
-                "password", TestPasswordRoleUser,
+                "login", TeacherUsername,
+                "password", TeacherPassword,
                 "role", "USER"
         );
 
@@ -84,7 +75,7 @@ public class UserControllerIntegrationTest extends BaseTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
-        assertThat(responseBody.get("login").toString()).isEqualTo(TestUsernameRoleUser);
+        assertThat(responseBody.get("login").toString()).isEqualTo(TeacherUsername);
         assertThat(responseBody.get("role").toString()).isEqualTo("USER");
 
         // Запомнить ID для следующего теста
@@ -104,13 +95,13 @@ public class UserControllerIntegrationTest extends BaseTest {
     void postCreateUser_UserAccess_ShouldReturnForbidden() throws JsonProcessingException {
         // Запрос
         Map<String, Object> userRequest = Map.of(
-                "login", TestUsernameRoleTeacher,
-                "password", TestPasswordRoleTeacher,
+                "login", TeacherUsername,
+                "password", TeacherPassword,
                 "role", "TEACHER"
         );
 
         ResponseEntity<String> response = executePost("/api/users", userRequest,
-                String.class, TestUsernameRoleUser, TestPasswordRoleUser);
+                String.class, TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
@@ -141,7 +132,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     void putChangeUser_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
         // Запрос
         String url = String.format("/api/users/%d/role?role=USER", testId);
-        ResponseEntity<String> response = executePut(url, String.class, TestUsernameRoleUser, TestPasswordRoleUser);
+        ResponseEntity<String> response = executePut(url, String.class, TeacherUsername, TeacherPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
@@ -153,7 +144,7 @@ public class UserControllerIntegrationTest extends BaseTest {
         String url = String.format("/api/users/%d/change-password", testId);
         // Запрос
         Map<String, Object> userRequest = Map.of(
-                "currentPassword", TestPasswordRoleUser,
+                "currentPassword", TeacherPassword,
                 "newPassword", newPassword
         );
 
@@ -161,7 +152,7 @@ public class UserControllerIntegrationTest extends BaseTest {
                 String.class, AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        TestPasswordRoleUser = newPassword;
+        BaseTest.TeacherPassword = newPassword;
     }
 
     @Test
@@ -171,12 +162,12 @@ public class UserControllerIntegrationTest extends BaseTest {
         String url = String.format("/api/users/%d/change-password", testId);
         // Запрос
         Map<String, Object> userRequest = Map.of(
-                "currentPassword", TestPasswordRoleUser,
+                "currentPassword", TeacherPassword,
                 "newPassword", "testpass"
         );
 
         ResponseEntity<String> response = executePut(url, userRequest,
-                String.class, TestUsernameRoleUser, TestPasswordRoleUser);
+                String.class, TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
@@ -187,7 +178,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     @DisplayName("9. DELETE /api/users/{id} - удаление пользователя пользователя TEACHER (от имени пользователя, ошибка 403)")
     void deleteUser_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
         String url = String.format("/api/users/%d", testId);
-        ResponseEntity<String> response = executeDelete(url,String.class, TestUsernameRoleUser, TestPasswordRoleUser);
+        ResponseEntity<String> response = executeDelete(url,String.class, TeacherUsername, TeacherPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 

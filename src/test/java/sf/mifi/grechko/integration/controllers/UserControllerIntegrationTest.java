@@ -134,7 +134,7 @@ public class UserControllerIntegrationTest extends BaseTest {
 
     @Test
     @Order(7)
-    @DisplayName("7. POST /api/users/{id}/change-password - изменение пароля пользователя TEACHER (админ)")
+    @DisplayName("7. PUT /api/users/{id}/change-password - изменение пароля пользователя TEACHER (админ)")
     void postChangePassword_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
         String newPassword = "new_pass";
         String url = String.format("/api/users/%d/change-password", testId);
@@ -144,7 +144,7 @@ public class UserControllerIntegrationTest extends BaseTest {
                 "newPassword", newPassword
         );
 
-        ResponseEntity<String> response = executePost(url, userRequest,
+        ResponseEntity<String> response = executePut(url, userRequest,
                 String.class, AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -153,7 +153,7 @@ public class UserControllerIntegrationTest extends BaseTest {
 
     @Test
     @Order(8)
-    @DisplayName("8. POST /api/users/{id}/change-password - изменение пароля пользователя TEACHER (от имени пользователя, ошибка 403)")
+    @DisplayName("8. PUT /api/users/{id}/change-password - изменение пароля пользователя TEACHER (от имени пользователя, ошибка 403)")
     void postChangePassword_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
         String url = String.format("/api/users/%d/change-password", testId);
         // Запрос
@@ -162,7 +162,7 @@ public class UserControllerIntegrationTest extends BaseTest {
                 "newPassword", "testpass"
         );
 
-        ResponseEntity<String> response = executePost(url, userRequest,
+        ResponseEntity<String> response = executePut(url, userRequest,
                 String.class, TestUsernameRoleUser, TestPasswordRoleUser);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);

@@ -10,8 +10,8 @@ import java.util.Base64;
 
 public abstract class BaseTest {
 
-    protected TestRestTemplate restTemplate;
-    protected String baseUrl;
+    protected static TestRestTemplate restTemplate;
+    protected static String baseUrl;
 
     protected static class ContentType {
         public boolean Usage;
@@ -23,7 +23,7 @@ public abstract class BaseTest {
         }
     }
 
-    protected HttpHeaders createHeaders(String username, String password, ContentType contentType) {
+    protected static HttpHeaders createHeaders(String username, String password, ContentType contentType) {
         String auth = username + ":" + password;
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
         HttpHeaders headers = new HttpHeaders();
@@ -41,7 +41,7 @@ public abstract class BaseTest {
             return restTemplate.exchange(baseUrl + url, HttpMethod.GET, request, responseType);
     }
 
-    protected <T, R> ResponseEntity<T> executePost(String url, R body, Class<T> responseType,
+    protected static <T, R> ResponseEntity<T> executePost(String url, R body, Class<T> responseType,
                                                    String username, String password) {
         HttpEntity<R> request = new HttpEntity<>(body, getHeader(username, password, new ContentType(true, "application/json")));
         return restTemplate.exchange(baseUrl + url, HttpMethod.POST, request, responseType);
@@ -66,7 +66,7 @@ public abstract class BaseTest {
         return restTemplate.exchange(baseUrl + url, HttpMethod.DELETE, request, responseType);
     }
 
-    private HttpHeaders getHeader(String username, String password, ContentType contentType) {
+    private static HttpHeaders getHeader(String username, String password, ContentType contentType) {
         if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
             return createHeaders(username, password, contentType);
         }

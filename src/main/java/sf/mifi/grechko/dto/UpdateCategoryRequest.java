@@ -1,4 +1,4 @@
-package sf.mifi.grechko.controllers;
+package sf.mifi.grechko.dto;
 
 import lombok.Data;
 

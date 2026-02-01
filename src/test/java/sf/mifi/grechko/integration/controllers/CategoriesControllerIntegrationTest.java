@@ -148,6 +148,11 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
         // Запомнить ID для следующего теста
         testId = Integer.valueOf(responseBody.get("id").toString());
+
+        // Админ пытается создать категорию с таким же именем
+        response = executePost("/api/categories", request, String.class,
+                AdminUsername, AdminPassword);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -160,6 +165,12 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
                 null, null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Запрос несуществующей категории
+        response = executeGet("/api/categories/"+testId+1, String.class,
+                null, null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
         // Админ получает категорию по ID
         response = executeGet("/api/categories/"+testId, String.class,
@@ -178,6 +189,8 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
                 UserUsername, UserPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+
     }
 
     @Test
@@ -207,6 +220,11 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
                 UserUsername, UserPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        // Админ изменяет категорию по несуществующему ID
+        response = executePut("/api/categories/"+testId+1,  request, String.class,
+                AdminUsername, AdminPassword);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
         // Админ изменяет категорию по ID
         response = executePut("/api/categories/"+testId,  request, String.class,
@@ -239,6 +257,12 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
                 UserUsername, UserPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        // Пробуем удалить несуществующую категорию
+        response = executeDelete("/api/categories/"+testId+1,  String.class,
+                AdminUsername, AdminPassword);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
         // Админ удаляет категорию по ID
         response = executeDelete("/api/categories/"+testId,  String.class,

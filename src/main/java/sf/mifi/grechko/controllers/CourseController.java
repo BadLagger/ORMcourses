@@ -30,19 +30,34 @@ public class CourseController {
     @GetMapping("/{id}")
     @Operation(summary = "Получить курс по ID (доступно всем)")
     public ResponseEntity<CourseDto> getCourseById(@PathVariable Integer id) {
-        return ResponseEntity.ok(courseService.getCourseById(id));
+        try {
+            var result = courseService.getCourseById(id);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/teacher/{teacherId}")
     @Operation(summary = "Получить курсы преподавателя (доступно всем)")
     public ResponseEntity<List<CourseDto>> getCoursesByTeacher(@PathVariable Integer teacherId) {
-        return ResponseEntity.ok(courseService.getCoursesByTeacher(teacherId));
+        try {
+            var result = courseService.getCoursesByTeacher(teacherId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/category/{categoryId}")
     @Operation(summary = "Получить курсы категории (доступно всем)")
     public ResponseEntity<List<CourseDto>> getCoursesByCategory(@PathVariable Integer categoryId) {
-        return ResponseEntity.ok(courseService.getCoursesByCategory(categoryId));
+        try {
+            var result = courseService.getCoursesByCategory(categoryId);
+            return ResponseEntity.ok(result);
+        } catch (Exception exp) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/my")
@@ -55,8 +70,13 @@ public class CourseController {
     @Operation(summary = "Создать курс (TEACHER или ADMIN)")
     public ResponseEntity<CourseDto> createCourse(
             @Valid @RequestBody CreateCourseRequest request) {
-        CourseDto course = courseService.createCourse(request);
-        return ResponseEntity.ok(course);
+        try {
+            CourseDto course = courseService.createCourse(request);
+            return ResponseEntity.ok(course);
+        } catch (Exception exp) {
+            return ResponseEntity.badRequest().build();
+        }
+
     }
 
     @PutMapping("/{id}")
@@ -64,14 +84,23 @@ public class CourseController {
     public ResponseEntity<CourseDto> updateCourse(
             @PathVariable Integer id,
             @Valid @RequestBody UpdateCourseRequest request) {
-        CourseDto updated = courseService.updateCourse(id, request);
-        return ResponseEntity.ok(updated);
+        try {
+            CourseDto updated = courseService.updateCourse(id, request);
+            return ResponseEntity.ok(updated);
+        } catch (Exception exp) {
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить курс (TEACHER - свои, ADMIN - все)")
     public ResponseEntity<Void> deleteCourse(@PathVariable Integer id) {
-        courseService.deleteCourse(id);
-        return ResponseEntity.noContent().build();
+        try {
+            courseService.deleteCourse(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception exp) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

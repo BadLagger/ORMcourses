@@ -89,8 +89,11 @@ public class ProfileController {
         profileDto.setBio(request.getBio());
         profileDto.setAvatarUrl(request.getAvatarUrl());
         profileDto.setEmail(request.getEmail());
-
-        ProfileDto updated = profileService.createOrUpdateProfile(userId, profileDto);
-        return ResponseEntity.ok(updated);
+        try {
+            ProfileDto updated = profileService.createOrUpdateProfile(userId, profileDto);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

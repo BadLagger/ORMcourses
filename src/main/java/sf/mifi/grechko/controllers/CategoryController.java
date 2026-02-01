@@ -30,15 +30,24 @@ public class CategoryController {
     @GetMapping("/{id}")
     @Operation(summary = "Получить категорию по ID (доступно всем)")
     public ResponseEntity<CategoryDto> getCategoryById(@PathVariable Integer id) {
-        return ResponseEntity.ok(categoryService.getCategoryById(id));
+        try {
+            var result = categoryService.getCategoryById(id);
+            return ResponseEntity.ok(result);
+        } catch (Exception exp) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
     @Operation(summary = "Создать категорию (только ADMIN)")
     public ResponseEntity<CategoryDto> createCategory(
             @Valid @RequestBody CreateCategoryRequest request) {
-        CategoryDto category = categoryService.createCategory(request.getName());
-        return ResponseEntity.ok(category);
+        try {
+            CategoryDto category = categoryService.createCategory(request.getName());
+            return ResponseEntity.ok(category);
+        } catch (Exception exp) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
@@ -46,14 +55,22 @@ public class CategoryController {
     public ResponseEntity<CategoryDto> updateCategory(
             @PathVariable Integer id,
             @Valid @RequestBody UpdateCategoryRequest request) {
-        CategoryDto updated = categoryService.updateCategory(id, request.getName());
-        return ResponseEntity.ok(updated);
+        try {
+            CategoryDto updated = categoryService.updateCategory(id, request.getName());
+            return ResponseEntity.ok(updated);
+        } catch (Exception exp) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить категорию (только ADMIN)")
     public ResponseEntity<Void> deleteCategory(@PathVariable Integer id) {
-        categoryService.deleteCategory(id);
-        return ResponseEntity.noContent().build();
+        try {
+            categoryService.deleteCategory(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception exp) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

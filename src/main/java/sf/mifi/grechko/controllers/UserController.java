@@ -32,19 +32,27 @@ public class UserController {
     @Operation(summary = "Создать нового пользователя (только для ADMIN)")
     public ResponseEntity<UserDto> createUser(
             @Valid @RequestBody CreateUserRequest request) {
-        UserDto user = userService.createUser(
-                request.getLogin(),
-                request.getPassword(),
-                request.getRole()
-        );
-        return ResponseEntity.ok(user);
+        try {
+            UserDto user = userService.createUser(
+                    request.getLogin(),
+                    request.getPassword(),
+                    request.getRole()
+            );
+            return ResponseEntity.ok(user);
+        } catch (Exception exp) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить пользователя (только для ADMIN)")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception exp) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{id}/role")
@@ -52,7 +60,12 @@ public class UserController {
     public ResponseEntity<UserDto> updateUserRole(
             @PathVariable Long id,
             @RequestParam User.Role role) {
-        return ResponseEntity.ok(userService.updateUserRole(id, role));
+        try {
+            var result = userService.updateUserRole(id, role);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{id}/change-password")
@@ -60,7 +73,11 @@ public class UserController {
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,
             @Valid @RequestBody ChangePasswordRequest request) {
-        userService.changePassword(id, request.getCurrentPassword(), request.getNewPassword());
-        return ResponseEntity.ok().build();
+        try {
+            userService.changePassword(id, request.getCurrentPassword(), request.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

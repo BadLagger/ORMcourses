@@ -89,6 +89,13 @@ public class UserControllerIntegrationTest extends BaseTest {
 
         // Запомнить ID для следующего теста
         testId = Integer.valueOf(responseBody.get("id").toString());
+
+        // Пробуем создать ещё одного пользователя с такими же данными
+        response = executePost("/api/users", userRequest,
+                String.class, AdminUsername, AdminPassword);
+
+        // Должны получить Bad Request
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -120,6 +127,12 @@ public class UserControllerIntegrationTest extends BaseTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
         assertThat(responseBody.get("role").toString()).isEqualTo("TEACHER");
+
+        // Пробуем установить роль для несуществующего пользователя
+        url = String.format("/api/users/%d/role?role=TEACHER", testId + 56);
+        response = executePut(url, String.class, AdminUsername, AdminPassword);
+        // Должны получить Not Found
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test

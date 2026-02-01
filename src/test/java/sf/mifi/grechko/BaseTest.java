@@ -18,17 +18,18 @@ public abstract class BaseTest {
 
     protected static final String AdminUsername="admin";
     protected static final String AdminPassword="admin123";
-    protected static final String TeacherUsername="teacher";
+    protected static String TeacherUsername="teacher";
     protected static String TeacherPassword="teacher123";
     protected static final String Teacher2Username="teacher2";
     protected static String Teacher2Password="teacher1232";
-    protected static final String UserUsername="user";
-    protected static final String UserPassword="user123";
-    protected static final String TestCategoryName="Java";
+    protected static String UserUsername="user";
+    protected static String UserPassword="user123";
+    protected static String TestCategoryName="Java";
     protected static Integer TestCategoryId = 0;
     protected static Integer TestTeacherId = 0;
     protected static Integer TestTeacher2Id = 0;
     protected static Integer TestUserId = 0;
+    protected static Integer TestCourseId = 0;
 
     protected static TestRestTemplate restTemplate;
     protected static String baseUrl;
@@ -207,7 +208,31 @@ public abstract class BaseTest {
         return true;
     }
 
-    protected static boolean deleteTestCategotiesViaApi() {
+    protected static boolean createTestCourseViaApi() {
+        Map<String, Object> request = Map.of(
+                "title", "REST API with Java",
+                "description", "test course",
+                "categoryId", TestCategoryId,
+                "duration", "5 weeks"
+        );
+
+        try {
+            ResponseEntity<String> response = executePost("/api/courses", request, String.class,
+                    TeacherUsername, TeacherPassword);
+            if (response.getStatusCode() != HttpStatus.OK) {
+                return false;
+            }
+            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+            TestCourseId = Integer.valueOf(responseBody.get("id").toString());
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+
+
+    protected static boolean deleteTestCategoriesViaApi() {
         String endpoint = "/api/categories" + "/" + TestCategoryId;
 
         try {

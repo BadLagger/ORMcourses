@@ -11,6 +11,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 import sf.mifi.grechko.BaseTest;
 
 import java.util.Map;
@@ -43,20 +44,20 @@ public class CourseControllerIntegrationTest extends BaseTest {
         }
     }
 
-    @AfterAll
+    /*@AfterAll
     static void cleanUp() {
-        /*if (!deleteTestUsersViaApi()) {
+        if (!deleteTestCategoriesViaApi()) {
+            throw new IllegalStateException("Failed to clean up test categories. API may be unavailable.");
+        }
+
+        if (!deleteTestUsersViaApi()) {
             throw new IllegalStateException("Failed to clean up test users. API may be unavailable.");
-        }*/
+        }
 
         if (!deleteAdditionUsersViaApi()) {
             throw new IllegalStateException("Failed to clean up additional users. API may be unavailable.");
         }
-
-        /*if (!deleteTestCategotiesViaApi()) {
-            throw new IllegalStateException("Failed to clean up test categories. API may be unavailable.");
-        }*/
-    }
+    }*/
 
     @Test
     @Order(28)

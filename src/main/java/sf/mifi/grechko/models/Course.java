@@ -1,5 +1,6 @@
 package sf.mifi.grechko.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +10,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "courses")
@@ -39,6 +42,10 @@ public class Course {
 
     @Column(length = 50)
     private String duration;  // "8 недель", "36 часов"
+
+    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Enrollment> enrollments = new ArrayList<>();
 
     @Column(name = "start_date")
     private LocalDate startDate;

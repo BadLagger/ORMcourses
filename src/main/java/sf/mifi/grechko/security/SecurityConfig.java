@@ -69,19 +69,26 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/enrollments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/enrollments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/enrollments/**").hasRole("ADMIN")
 
                         // TEACHER and ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/courses/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/courses/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasAnyRole("TEACHER", "ADMIN")
+
+                        // TEACHER only
                         .requestMatchers("/api/courses/my").hasRole("TEACHER")
 
                         // Authenticated users
                         .requestMatchers("/api/profiles/**").authenticated()
+                        .requestMatchers("/api/enrollments/my").authenticated()
 
                         // Public access (read-only)
                         .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/enrollments/**").permitAll()
 
                         .anyRequest().permitAll()
                 )

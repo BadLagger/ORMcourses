@@ -1,10 +1,10 @@
 CREATE TABLE assignments (
     id SERIAL PRIMARY KEY,
-    lesson_id INT NOT NULL,
+    lesson_id INTEGER NOT NULL,
     title VARCHAR(200) NOT NULL,
     description TEXT,
     due_date TIMESTAMP,
-    max_score INT DEFAULT 100,
+    max_score INTEGER  DEFAULT 100,
 
     FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
 

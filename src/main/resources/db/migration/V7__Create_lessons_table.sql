@@ -1,6 +1,6 @@
 CREATE TABLE lessons (
     id SERIAL PRIMARY KEY,
-    module_id INT NOT NULL,
+    module_id INTEGER NOT NULL,
     title VARCHAR(200) NOT NULL,
     content TEXT,
     video_url VARCHAR(500),

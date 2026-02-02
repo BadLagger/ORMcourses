@@ -29,6 +29,7 @@ public abstract class BaseTest {
     protected static Integer TestUserId = 0;
     protected static Integer TestCourseId = 0;
     protected static Integer TestModuleId = 0;
+    protected static Integer TestLessonId = 0;
 
     protected static TestRestTemplate restTemplate;
     protected static String baseUrl;
@@ -244,6 +245,29 @@ public abstract class BaseTest {
             }
             Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             TestModuleId = Integer.valueOf(responseBody.get("id").toString());
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    protected static boolean createTestLessonViaApi() {
+
+        Map<String, Object> request = Map.of(
+                "title", "Test Lesson",
+                "content", "Test Content",
+                "videoUrl", "http://my.lesson",
+                "moduleId", TestModuleId
+        );
+
+        try {
+            ResponseEntity<String> response = executePost("/api/lessons", request, String.class,
+                    AdminUsername, AdminPassword);
+            if (response.getStatusCode() != HttpStatus.OK) {
+                return false;
+            }
+            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+            TestLessonId = Integer.valueOf(responseBody.get("id").toString());
         } catch (Exception e) {
             return false;
         }

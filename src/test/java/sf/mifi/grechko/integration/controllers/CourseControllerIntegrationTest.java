@@ -29,6 +29,14 @@ public class CourseControllerIntegrationTest extends BaseTest  {
         BaseTest.restTemplate = restTemplate;
         BaseTest.baseUrl = BASE_HOST_URL + port;
 
+        BaseTest.UserUsername = "courseUser";
+        BaseTest.UserPassword = "courseUser123";
+
+        BaseTest.TeacherUsername= "courseTeacher";
+        BaseTest.TeacherPassword = "courseTeacher123";
+
+        BaseTest.TestCategoryName = "Courses";
+
         if (!createTestUsersViaApi()) {
             throw new IllegalStateException("Failed to set up test users. API may be unavailable.");
         }

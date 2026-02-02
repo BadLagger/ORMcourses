@@ -70,6 +70,7 @@ public class EnrollmentController {
             return ResponseEntity.notFound().build();
         }
     }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить связь (только ADMIN)")
     public ResponseEntity<Void> deleteEnrollmentById(@PathVariable Integer id) {

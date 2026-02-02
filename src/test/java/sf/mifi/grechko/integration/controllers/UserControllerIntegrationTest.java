@@ -2,7 +2,6 @@ package sf.mifi.grechko.integration.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,18 +21,20 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserControllerIntegrationTest extends BaseTest {
 
-    @LocalServerPort
-    private int port;
-
-    @Autowired
-    private TestRestTemplate template;
-
     private static Integer testId;
 
-    @BeforeEach
-    void setUp() {
-        this.restTemplate = template;
-        this.baseUrl = "http://localhost:" + port;
+    @BeforeAll
+    static void setupAll(@Autowired TestRestTemplate restTemplate, @LocalServerPort int port) {
+        BaseTest.restTemplate = restTemplate;
+        BaseTest.baseUrl = BASE_HOST_URL + port;
+
+        // Костыли, нужно разобраться почему не работает удаление в предыдущем модуле
+        BaseTest.UserUsername = "usUser";
+        BaseTest.UserPassword = "usUser123";
+
+        BaseTest.TeacherUsername= "usTeacher";
+        BaseTest.TeacherPassword = "usTeacher123";
+
     }
 
     @Test
@@ -74,7 +75,7 @@ public class UserControllerIntegrationTest extends BaseTest {
                 String.class, AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("login").toString()).isEqualTo(TeacherUsername);
         assertThat(responseBody.get("role").toString()).isEqualTo("USER");
 
@@ -92,7 +93,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     @Test
     @Order(4)
     @DisplayName("4. POST /api/users - создание нового пользователя TEACHER (от имени пользователя, ошибка 403)")
-    void postCreateUser_UserAccess_ShouldReturnForbidden() throws JsonProcessingException {
+    void postCreateUser_UserAccess_ShouldReturnForbidden() {
         // Запрос
         Map<String, Object> userRequest = Map.of(
                 "login", TeacherUsername,
@@ -116,7 +117,7 @@ public class UserControllerIntegrationTest extends BaseTest {
         ResponseEntity<String> response = executePut(url, String.class, AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("role").toString()).isEqualTo("TEACHER");
 
         // Пробуем установить роль для несуществующего пользователя
@@ -129,7 +130,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     @Test
     @Order(6)
     @DisplayName("6. PUT /api/users/{id}/role - изменить роль пользователя на USER (от имени пользователя, ошибка 403)")
-    void putChangeUser_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
+    void putChangeUser_TeacherAccess_ShouldReturnForbidden()  {
         // Запрос
         String url = String.format("/api/users/%d/role?role=USER", testId);
         ResponseEntity<String> response = executePut(url, String.class, TeacherUsername, TeacherPassword);
@@ -139,7 +140,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     @Test
     @Order(7)
     @DisplayName("7. PUT /api/users/{id}/change-password - изменение пароля пользователя TEACHER (админ)")
-    void postChangePassword_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
+    void postChangePassword_AdminAccess_ShouldReturnOk()  {
         String newPassword = "new_pass";
         String url = String.format("/api/users/%d/change-password", testId);
         // Запрос
@@ -158,7 +159,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     @Test
     @Order(8)
     @DisplayName("8. PUT /api/users/{id}/change-password - изменение пароля пользователя TEACHER (от имени пользователя, ошибка 403)")
-    void postChangePassword_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
+    void postChangePassword_TeacherAccess_ShouldReturnForbidden()  {
         String url = String.format("/api/users/%d/change-password", testId);
         // Запрос
         Map<String, Object> userRequest = Map.of(
@@ -176,7 +177,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     @Test
     @Order(9)
     @DisplayName("9. DELETE /api/users/{id} - удаление пользователя пользователя TEACHER (от имени пользователя, ошибка 403)")
-    void deleteUser_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
+    void deleteUser_TeacherAccess_ShouldReturnForbidden()  {
         String url = String.format("/api/users/%d", testId);
         ResponseEntity<String> response = executeDelete(url,String.class, TeacherUsername, TeacherPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -185,7 +186,7 @@ public class UserControllerIntegrationTest extends BaseTest {
     @Test
     @Order(10)
     @DisplayName("10. DELETE /api/users/{id} - удаление пользователя пользователя TEACHER (админ)")
-    void deleteUser_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
+    void deleteUser_AdminAccess_ShouldReturnOk()  {
         String url = String.format("/api/users/%d", testId);
         ResponseEntity<String> response = executeDelete(url,String.class, AdminUsername, AdminPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);

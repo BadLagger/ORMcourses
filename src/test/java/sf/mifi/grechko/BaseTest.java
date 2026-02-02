@@ -1,9 +1,7 @@
 package sf.mifi.grechko;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jboss.jandex.TypeTarget;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 
@@ -30,6 +28,7 @@ public abstract class BaseTest {
     protected static Integer TestTeacher2Id = 0;
     protected static Integer TestUserId = 0;
     protected static Integer TestCourseId = 0;
+    protected static Integer TestModuleId = 0;
 
     protected static TestRestTemplate restTemplate;
     protected static String baseUrl;
@@ -94,7 +93,7 @@ public abstract class BaseTest {
         return new HttpHeaders();
     }
 
-    protected static boolean createTestUsersViaApi(TestRestTemplate restTemplate, int port) {
+    protected static boolean createTestUsersViaApi() {
         Map<String, Object> teacherRequest = Map.of(
                 "login", TeacherUsername,
                 "password", TeacherPassword,
@@ -113,7 +112,7 @@ public abstract class BaseTest {
             if (response.getStatusCode() != HttpStatus.OK) {
                 return false;
             }
-            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             TestTeacherId = Integer.valueOf(responseBody.get("id").toString());
 
             response = executePost("/api/users", userRequest,
@@ -122,7 +121,7 @@ public abstract class BaseTest {
             if (response.getStatusCode() != HttpStatus.OK) {
                 return false;
             }
-            responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+            responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             TestUserId = Integer.valueOf(responseBody.get("id").toString());
 
         } catch (Exception exp) {
@@ -144,7 +143,7 @@ public abstract class BaseTest {
             if (response.getStatusCode() != HttpStatus.OK) {
                 return false;
             }
-            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             TestTeacher2Id = Integer.valueOf(responseBody.get("id").toString());
         } catch (Exception exp) {
             return false;
@@ -189,7 +188,7 @@ public abstract class BaseTest {
         return true;
     }
 
-    protected static boolean createTestCategoryViaApi(TestRestTemplate restTemplate, int port) {
+    protected static boolean createTestCategoryViaApi() {
         Map<String, Object> request = Map.of(
                 "name", TestCategoryName
         );
@@ -200,7 +199,7 @@ public abstract class BaseTest {
             if (response.getStatusCode() != HttpStatus.OK) {
                 return false;
             }
-            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             TestCategoryId = Integer.valueOf(responseBody.get("id").toString());
         } catch (Exception e) {
             return false;
@@ -222,8 +221,29 @@ public abstract class BaseTest {
             if (response.getStatusCode() != HttpStatus.OK) {
                 return false;
             }
-            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             TestCourseId = Integer.valueOf(responseBody.get("id").toString());
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    protected static boolean createTestModuleViaApi() {
+        Map<String, Object> request = Map.of(
+                "title", "Introduction",
+                "description", "Test description",
+                "courseId", TestCourseId
+        );
+
+        try {
+            ResponseEntity<String> response = executePost("/api/modules", request, String.class,
+                    AdminUsername, AdminPassword);
+            if (response.getStatusCode() != HttpStatus.OK) {
+                return false;
+            }
+            Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+            TestModuleId = Integer.valueOf(responseBody.get("id").toString());
         } catch (Exception e) {
             return false;
         }

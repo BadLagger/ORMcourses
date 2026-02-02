@@ -15,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import sf.mifi.grechko.repositories.UserRepository;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -80,6 +79,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/modules/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/modules/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/lessons/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/lessons/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/lessons/**").hasAnyRole("TEACHER", "ADMIN")
 
                         // TEACHER only
                         .requestMatchers("/api/courses/my").hasRole("TEACHER")
@@ -87,6 +89,7 @@ public class SecurityConfig {
                         // Authenticated users
                         .requestMatchers("/api/profiles/**").authenticated()
                         .requestMatchers("/api/enrollments/my").authenticated()
+                        .requestMatchers("/api/lessons/**").authenticated()
 
                         // Public access (read-only)
                         .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()

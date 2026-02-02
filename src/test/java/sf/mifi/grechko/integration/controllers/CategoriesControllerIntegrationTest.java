@@ -2,7 +2,6 @@ package sf.mifi.grechko.integration.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,7 +30,14 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
         BaseTest.restTemplate = restTemplate;
         BaseTest.baseUrl = BASE_HOST_URL + port;
 
-        if (!createTestUsersViaApi(restTemplate, port)) {
+        // Костыли, нужно разобраться почему не работает удаление в предыдущем модуле
+        BaseTest.UserUsername = "catUser";
+        BaseTest.UserPassword = "catUser123";
+
+        BaseTest.TeacherUsername= "catTeacher";
+        BaseTest.TeacherPassword = "catTeacher123";
+
+        if (!createTestUsersViaApi()) {
             throw new IllegalStateException("Failed to set up test users. API may be unavailable.");
         }
     }
@@ -45,7 +51,7 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
 
 
     @Test
-    @Order(23)
+    @Order(1)
     @DisplayName("1. GET /api/categories - получение всех категорий (доступ для всех)")
     void getAllCategory_ForAll_ShouldReturnOk() {
 
@@ -75,7 +81,7 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(24)
+    @Order(2)
     @DisplayName("2. POST /api/categories - создание новой категории (доступ для ADMIN)")
     void createCategory_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
 
@@ -109,7 +115,7 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         // Запомнить ID для следующего теста
         testId = Integer.valueOf(responseBody.get("id").toString());
 
@@ -120,7 +126,7 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(25)
+    @Order(3)
     @DisplayName("3. GET /api/categories/{id} - получение категории ID (доступ для всех)")
     void getCategoryById_ForAll_ShouldReturnOk() {
 
@@ -158,7 +164,7 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(26)
+    @Order(4)
     @DisplayName("4. PUT /api/categories/{id} - изменить название категории (доступ для ADMIN)")
     void changeCategoryById_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
         String newCategoryName = "math";
@@ -195,14 +201,14 @@ public class CategoriesControllerIntegrationTest extends BaseTest {
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("name").toString()).isEqualTo(newCategoryName);
     }
 
     @Test
-    @Order(27)
+    @Order(5)
     @DisplayName("5. DELETE /api/categories/{id} - удалить категорию (доступ для ADMIN)")
-    void deleteCategoryById_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
+    void deleteCategoryById_AdminAccess_ShouldReturnOk()  {
 
         // Запрос без авторизации удалить категорию по ID
         ResponseEntity<String> response = executeDelete("/api/categories/"+testId, String.class,

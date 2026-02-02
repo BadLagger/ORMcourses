@@ -2,7 +2,6 @@ package sf.mifi.grechko.integration.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,11 +20,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ProfileControllerIntegrationTest extends BaseTest {
-    @LocalServerPort
-    private int port;
-
-    @Autowired
-    private TestRestTemplate template;
 
     private final String TestBioInfo="Test Bio Info";
     private final String TestAvatarUrl="http://test.avatar.url";
@@ -34,14 +28,22 @@ public class ProfileControllerIntegrationTest extends BaseTest {
 
     private static Integer testId;
 
-    @BeforeEach
-    void setUp() {
-        this.restTemplate = template;
-        this.baseUrl = "http://localhost:" + port;
+    @BeforeAll
+    static void setupAll(@Autowired TestRestTemplate restTemplate, @LocalServerPort int port) {
+        BaseTest.restTemplate = restTemplate;
+        BaseTest.baseUrl = BASE_HOST_URL + port;
+
+        // Костыли, нужно разобраться почему не работает удаление в предыдущем модуле
+        BaseTest.UserUsername = "prUser";
+        BaseTest.UserPassword = "prUser123";
+
+        BaseTest.TeacherUsername= "prTeacher";
+        BaseTest.TeacherPassword = "prTeacher123";
+
     }
 
     @Test
-    @Order(11)
+    @Order(1)
     @DisplayName("1. PUT /api/profiles/me - прописываем собственный профиль (админ)")
     void putProfile_AdminAccess_ShouldReturnOk() {
 
@@ -60,7 +62,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(12)
+    @Order(2)
     @DisplayName("2. GET /api/profiles/me - получаем собственный профиль (админ)")
     void getProfile_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
 
@@ -68,14 +70,14 @@ public class ProfileControllerIntegrationTest extends BaseTest {
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("bio").toString()).isEqualTo(TestBioInfo);
         assertThat(responseBody.get("avatarUrl").toString()).isEqualTo(TestAvatarUrl);
         assertThat(responseBody.get("email").toString()).isEqualTo(TestEmail);
     }
 
     @Test
-    @Order(13)
+    @Order(3)
     @DisplayName("3. POST /api/users - создание нового пользователя TEACHER (админ)")
     void postCreateUser_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
         // Запрос
@@ -89,7 +91,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
                 String.class, AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("login").toString()).isEqualTo(TeacherUsername);
         assertThat(responseBody.get("role").toString()).isEqualTo("TEACHER");
 
@@ -98,7 +100,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(14)
+    @Order(4)
     @DisplayName("4. PUT /api/profiles/me - прописываем собственный профиль с уже существующим email (пользователь TEACHER, ошибка 500)")
     void putProfile_TeacherAccess_ShouldReturnInternalServerError() {
 
@@ -117,7 +119,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(15)
+    @Order(5)
     @DisplayName("5. PUT /api/profiles/me - прописываем собственный профиль (пользователь TEACHER)")
     void putProfile_TeacherAccess_ShouldReturnOk() {
 
@@ -136,7 +138,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(16)
+    @Order(6)
     @DisplayName("6. GET /api/profiles/me - получаем собственный профиль (пользователь TEACHER)")
     void getProfile_TeacherAccess_ShouldReturnOk() throws JsonProcessingException {
 
@@ -144,16 +146,16 @@ public class ProfileControllerIntegrationTest extends BaseTest {
                 TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("bio").toString()).isEqualTo(TestBioInfo);
         assertThat(responseBody.get("avatarUrl").toString()).isEqualTo(TestAvatarUrl);
         assertThat(responseBody.get("email").toString()).isEqualTo(TestEmail2);
     }
 
     @Test
-    @Order(17)
+    @Order(7)
     @DisplayName("7. GET /api/profiles/user/{id} - получаем профиль по id (пользователь TEACHER, ошибка 403)")
-    void getProfileById_TeacherAccess_ShouldReturnForbidden() throws JsonProcessingException {
+    void getProfileById_TeacherAccess_ShouldReturnForbidden()  {
 
         System.out.printf("Test ID: %d%n", testId);
         String url = String.format("/api/profiles/user/%d", testId);
@@ -164,7 +166,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(18)
+    @Order(8)
     @DisplayName("8. GET /api/profiles/user/{id} - получаем профиль по id (пользователь админ)")
     void getProfileById_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
 
@@ -173,14 +175,14 @@ public class ProfileControllerIntegrationTest extends BaseTest {
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("bio").toString()).isEqualTo(TestBioInfo);
         assertThat(responseBody.get("avatarUrl").toString()).isEqualTo(TestAvatarUrl);
         assertThat(responseBody.get("email").toString()).isEqualTo(TestEmail2);
     }
 
     @Test
-    @Order(19)
+    @Order(9)
     @DisplayName("9. PUT /api/profiles/user/{id} - прописываем профиль по id (пользователь TEACHER, ошибка 403)")
     void putProfileBy_TeacherAccess_ShouldReturnForbidden() {
 
@@ -200,7 +202,7 @@ public class ProfileControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(20)
+    @Order(10)
     @DisplayName("10. PUT /api/profiles/user/{id} - прописываем профиль по id (пользователь админ)")
     void putProfileBy_TeacherAccess_ShouldReturnOk() throws JsonProcessingException {
 
@@ -220,25 +222,25 @@ public class ProfileControllerIntegrationTest extends BaseTest {
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("bio").toString()).isEqualTo(newInfo);
         assertThat(responseBody.get("avatarUrl").toString()).isEqualTo(newAvatar);
         assertThat(responseBody.get("email").toString()).isEqualTo(newEmail);
     }
 
     @Test
-    @Order(21)
+    @Order(11)
     @DisplayName("11. DELETE /api/users/{id} - удаление пользователя пользователя TEACHER (админ)")
-    void deleteUser_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
+    void deleteUser_AdminAccess_ShouldReturnOk()  {
         String url = String.format("/api/users/%d", testId);
         ResponseEntity<String> response = executeDelete(url,String.class, AdminUsername, AdminPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
     @Test
-    @Order(22)
+    @Order(12)
     @DisplayName("12. GET /api/profiles/user/{id} - получаем профиль по id после удаления пользователя (пользователь админ, ошибка 404)")
-    void getProfileById_AdminAccess_ShouldReturnNotFound() throws JsonProcessingException {
+    void getProfileById_AdminAccess_ShouldReturnNotFound()  {
 
         String url = String.format("/api/profiles/user/%d", testId);
         ResponseEntity<String> response = executeGet(url, String.class,

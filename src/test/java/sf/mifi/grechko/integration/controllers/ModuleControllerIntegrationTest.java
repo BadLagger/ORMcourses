@@ -37,11 +37,11 @@ public class ModuleControllerIntegrationTest extends BaseTest {
 
         BaseTest.TestCategoryName = "Python";
 
-        if (!createTestUsersViaApi(restTemplate, port)) {
+        if (!createTestUsersViaApi()) {
             throw new IllegalStateException("Failed to set up test users. API may be unavailable.");
         }
 
-        if (!createTestCategoryViaApi(restTemplate, port)) {
+        if (!createTestCategoryViaApi()) {
             throw new IllegalStateException("Failed to set up test category. API may be unavailable.");
         }
 
@@ -51,7 +51,7 @@ public class ModuleControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(42)
+    @Order(1)
     @DisplayName("1. GET /api/modules - получение всех модулей (доступ для всех)")
     void getAllModules_ForAll_ShouldReturnOk() {
         // Админ получает список всех связей
@@ -80,7 +80,7 @@ public class ModuleControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(43)
+    @Order(2)
     @DisplayName("2. POST /api/modules - создание нового модуля (ADMIN и TEACHER)")
     void createModules_AdminTeacherAccess_ShouldReturnOk() throws JsonProcessingException {
 
@@ -125,14 +125,14 @@ public class ModuleControllerIntegrationTest extends BaseTest {
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         testId = Integer.valueOf(responseBody.get("id").toString());
     }
 
     @Test
-    @Order(44)
+    @Order(3)
     @DisplayName("3. GET /api/modules/{id} - получение модуля по ID (для всех)")
-    void getModuleById_ForAll_ShouldReturnOk() throws JsonProcessingException {
+    void getModuleById_ForAll_ShouldReturnOk() {
         String endpoint = baseEndpoint + "/" + testId;
         String wrongEndpoint = baseEndpoint + "/" + (testId + 1);
 
@@ -168,7 +168,7 @@ public class ModuleControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(45)
+    @Order(4)
     @DisplayName("4. PUT /api/modules/{id} - обновить модуль (ADMIN и TEACHER)")
     void updateModule_AdminTeacherAccess_ShouldReturnOk() throws JsonProcessingException {
         String endpoint = baseEndpoint + "/" + testId;
@@ -198,7 +198,7 @@ public class ModuleControllerIntegrationTest extends BaseTest {
         response = executePut(endpoint, requestOne, String.class,
                 TeacherUsername, TeacherPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("title").toString()).isEqualTo(newTitleOne);
 
         // Попытка изменить модуль от админа на несуществующем модуле
@@ -210,12 +210,12 @@ public class ModuleControllerIntegrationTest extends BaseTest {
         response = executePut(endpoint, requestTwo, String.class,
                 AdminUsername, AdminPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertThat(responseBody.get("title").toString()).isEqualTo(newTitleTwo);
     }
 
     @Test
-    @Order(46)
+    @Order(5)
     @DisplayName("5. DELETE /api/modules/{id} - удалить модуль по ID (только для ADMIN)")
     void deleteEnrollment_AdminAccess_ShouldReturnOk() {
         String endpoint = baseEndpoint + "/" + testId;
@@ -246,6 +246,4 @@ public class ModuleControllerIntegrationTest extends BaseTest {
                 AdminUsername, AdminPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
-
-
 }

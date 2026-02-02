@@ -2,7 +2,6 @@ package sf.mifi.grechko.integration.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,7 +10,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 import sf.mifi.grechko.BaseTest;
 
 import java.util.Map;
@@ -21,7 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CourseControllerIntegrationTest extends BaseTest {
+public class CourseControllerIntegrationTest extends BaseTest  {
 
     private static Integer testId;
     private static final String baseEndpoint = "/api/courses";
@@ -31,11 +29,11 @@ public class CourseControllerIntegrationTest extends BaseTest {
         BaseTest.restTemplate = restTemplate;
         BaseTest.baseUrl = BASE_HOST_URL + port;
 
-        if (!createTestUsersViaApi(restTemplate, port)) {
+        if (!createTestUsersViaApi()) {
             throw new IllegalStateException("Failed to set up test users. API may be unavailable.");
         }
 
-        if (!createTestCategoryViaApi(restTemplate, port)) {
+        if (!createTestCategoryViaApi()) {
             throw new IllegalStateException("Failed to set up test category. API may be unavailable.");
         }
 
@@ -60,7 +58,7 @@ public class CourseControllerIntegrationTest extends BaseTest {
     }*/
 
     @Test
-    @Order(28)
+    @Order(1)
     @DisplayName("1. GET /api/courses - получение всех курсов (доступ для всех)")
     void getAllCourses_ForAll_ShouldReturnOk() {
 
@@ -90,7 +88,7 @@ public class CourseControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(29)
+    @Order(2)
     @DisplayName("2. POST /api/courses - создание нового курса (доступ для ADMIN и TEACHER)")
     void createCourse_AdminTeacherAccess_ShouldReturnOk() throws JsonProcessingException {
         Map<String, Object> requestWithoutTeacherId = Map.of(
@@ -151,13 +149,13 @@ public class CourseControllerIntegrationTest extends BaseTest {
                 TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         testId = Integer.valueOf(responseBody.get("id").toString());
     }
 
 
     @Test
-    @Order(30)
+    @Order(3)
     @DisplayName("3. GET /api/courses/{id} - получение курса по ID (доступ для всех)")
     void getCourseById_ForAll_ShouldReturnOk() {
         String endpoint = baseEndpoint + "/" + testId;
@@ -195,7 +193,7 @@ public class CourseControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(31)
+    @Order(4)
     @DisplayName("4. GET /api/courses/teacher/{teacherId} - получение курса по ID учителя (доступ для всех)")
     void getCourseByTeacherId_ForAll_ShouldReturnOk() {
         String endpoint = baseEndpoint + "/teacher/" + TestTeacherId;
@@ -234,7 +232,7 @@ public class CourseControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(32)
+    @Order(5)
     @DisplayName("4. GET /api/courses/category/{categoryId} - получение курса по ID категории (доступ для всех)")
     void getCourseByCategoryId_ForAll_ShouldReturnOk() {
         String endpoint = baseEndpoint + "/category/" + TestCategoryId;
@@ -267,7 +265,7 @@ public class CourseControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(33)
+    @Order(6)
     @DisplayName("5. GET /api/courses/my - получение своих курсов (доступ для TEACHER)")
     void getCourseMy_TeacherAccess_ShouldReturnOk() {
         String endpoint = baseEndpoint + "/my";
@@ -300,7 +298,7 @@ public class CourseControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(34)
+    @Order(7)
     @DisplayName("6. PUT /api/courses/{id} - обновить информацию о курсе (для TEACHER только свои курсы, ADMIN все)")
     void putCourseById_AdminTeacherAccess_ShouldReturnOk() {
         String endpoint = baseEndpoint + "/" + testId;
@@ -337,7 +335,7 @@ public class CourseControllerIntegrationTest extends BaseTest {
     }
 
     @Test
-    @Order(35)
+    @Order(8)
     @DisplayName("7. DELETE /api/courses/{id} - удалить курс по ID (для TEACHER только свои курсы, ADMIN все)")
     void deleteCourseById_AdminTeacherAccess_ShouldReturnOk() throws JsonProcessingException {
         String endpoint = baseEndpoint + "/" + testId;
@@ -373,7 +371,7 @@ public class CourseControllerIntegrationTest extends BaseTest {
         response = executePost(baseEndpoint, requestTeacherId, String.class,
                 Teacher2Username, Teacher2Password);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         testId = Integer.valueOf(responseBody.get("id").toString());
         endpoint = baseEndpoint + "/" + testId;
 

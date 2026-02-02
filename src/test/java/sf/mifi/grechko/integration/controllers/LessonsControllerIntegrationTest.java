@@ -19,9 +19,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class EnrollmentControllerIntegrationTest extends BaseTest {
-
-    private static final String baseEndpoint = "/api/enrollments";
+public class LessonsControllerIntegrationTest extends BaseTest{
+    private static final String baseEndpoint = "/api/lessons";
     private static Integer testId;
 
     @BeforeAll
@@ -30,13 +29,13 @@ public class EnrollmentControllerIntegrationTest extends BaseTest {
         BaseTest.baseUrl = BASE_HOST_URL + port;
 
         // Костыли, нужно разобраться почему не работает удаление в предыдущем модуле
-        BaseTest.UserUsername = "enrUser";
-        BaseTest.UserPassword = "enrUser123";
+        BaseTest.UserUsername = "lesUser";
+        BaseTest.UserPassword = "lesUser123";
 
-        BaseTest.TeacherUsername= "enrTeacher";
-        BaseTest.TeacherPassword = "enrTeacher123";
+        BaseTest.TeacherUsername= "lesTeacher";
+        BaseTest.TeacherPassword = "lesTeacher123";
 
-        BaseTest.TestCategoryName = "C++";
+        BaseTest.TestCategoryName = "Ruby";
 
         if (!createTestUsersViaApi()) {
             throw new IllegalStateException("Failed to set up test users. API may be unavailable.");
@@ -49,25 +48,29 @@ public class EnrollmentControllerIntegrationTest extends BaseTest {
         if (!createTestCourseViaApi()) {
             throw new IllegalStateException("Failed to set up test course. API may be unavailable.");
         }
+
+        if (!createTestModuleViaApi()) {
+            throw new IllegalStateException("Failed to set up test module. API may be unavailable.");
+        }
     }
 
     @Test
     @Order(1)
-    @DisplayName("1. GET /api/enrollments - получение всех связей пользователей и курсов (доступ для всех)")
-    void getAllEnrollments_ForAll_ShouldReturnOk() {
-        // Админ получает список всех связей
+    @DisplayName("1. GET /api/lessons - получение всех уроков (доступ только для авторизированных)")
+    void getAllLessons_ForAll_ShouldReturnOk() {
+        // Админ получает список всех уроков
         ResponseEntity<String> response = executeGet(baseEndpoint, String.class,
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Учитель получает список всех связей
+        // Учитель получает список всех уроков
         response = executeGet(baseEndpoint, String.class,
                 TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Пользователь получает список всех связей
+        // Пользователь получает список всех уроков
         response = executeGet(baseEndpoint, String.class,
                 UserUsername, UserPassword);
 
@@ -77,49 +80,54 @@ public class EnrollmentControllerIntegrationTest extends BaseTest {
         response = executeGet(baseEndpoint, String.class,
                 null, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
     @Order(2)
-    @DisplayName("2. POST /api/enrollments - создание новой связи пользователя и курса (только ADMIN)")
-    void createEnrollment_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
-        Map<String, Object> requestWithWrongId = Map.of(
-                "userId", TestTeacherId,
-                "courseId", TestCourseId
-        );
+    @DisplayName("2. POST /api/lessons - создание нового урока (ADMIN и TEACHER)")
+    void createLesson_AdminTeacherAccess_ShouldReturnOk() throws JsonProcessingException {
 
         Map<String, Object> requestWithRightId = Map.of(
-                "userId", TestUserId,
-                "courseId", TestCourseId
+                "title", "Test Lesson",
+                "content", "Test Content",
+                "videoUrl", "http://my.lesson",
+                "moduleId", TestModuleId
         );
 
-        // Пытаемся добавить новый курс без авторизации
+        Map<String, Object> requestWithSecondId = Map.of(
+                "title", "Test Second Lesson",
+                "content", "Test Second Content",
+                "videoUrl", "http://my.lesson2",
+                "moduleId", TestModuleId
+        );
+
+        // Пытаемся добавить новый урок без авторизации
         ResponseEntity<String> response = executePost(baseEndpoint, requestWithRightId, String.class,
                 null, null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
-        // Пытаемся добавить новый курс как простой пользователь
+        // Пытаемся добавить новый урок как простой пользователь
         response = executePost(baseEndpoint, requestWithRightId, String.class,
                 UserUsername, UserPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
 
-        // Пытаемся добавить новый курс как учитель
+        // Пытаемся добавить новый урок как учитель
         response = executePost(baseEndpoint, requestWithRightId, String.class,
                 TeacherUsername, TeacherPassword);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Пытаемся добавить новый курс как админ, но с неправильным ID
-        response = executePost(baseEndpoint, requestWithWrongId, String.class,
+        // Пытаемся добавить новый урок как админ, но с неправильным ID
+        response = executePost(baseEndpoint, requestWithRightId, String.class,
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
-        // Пытаемся добавить новый курс как админ
-        response = executePost(baseEndpoint, requestWithRightId, String.class,
+        // Пытаемся добавить новый урок как админ
+        response = executePost(baseEndpoint, requestWithSecondId, String.class,
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -129,24 +137,24 @@ public class EnrollmentControllerIntegrationTest extends BaseTest {
 
     @Test
     @Order(3)
-    @DisplayName("3. GET /api/enrollments/{id} - получение связи по ID (для всех)")
+    @DisplayName("3. GET /api/lessons/{id} - получение урока по ID (для всех авторизированных)")
     void getEnrollmentById_ForAll_ShouldReturnOk()  {
         String endpoint = baseEndpoint + "/" + testId;
         String wrongEndpoint = baseEndpoint + "/" + (testId + 1);
 
-        // Админ получает связь по ID
+        // Админ получает урок по ID
         ResponseEntity<String> response = executeGet(endpoint, String.class,
                 AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Учитель получает связь по ID
+        // Учитель получает урок по ID
         response = executeGet(endpoint, String.class,
                 TeacherUsername, TeacherPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        // Пользователь получает связь по ID
+        // Пользователь получает урок по ID
         response = executeGet(endpoint, String.class,
                 UserUsername, UserPassword);
 
@@ -156,111 +164,93 @@ public class EnrollmentControllerIntegrationTest extends BaseTest {
         response = executeGet(endpoint, String.class,
                 null, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
-        // Получение несуществующей связи по ID без авторизации
+        // Получение несуществующей связи по ID под ADMIN
         response = executeGet(wrongEndpoint, String.class,
-                null, null);
+                AdminUsername, AdminPassword);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     @Order(4)
-    @DisplayName("4. GET /api/enrollments/my - получение своих связей (для всех авторизированных)")
-    void getMyEnrollment_ForAll_ShouldReturnOk()  {
-        String endpoint = baseEndpoint + "/my";
+    @DisplayName("4. PUT /api/lessons/{id} - обновить урок (ADMIN и TEACHER)")
+    void updateLesson_AdminTeacherAccess_ShouldReturnOk() throws JsonProcessingException {
+        String endpoint = baseEndpoint + "/" + testId;
+        String wrongEndpoint = baseEndpoint + "/" + (testId + 1);
+        String newTitleOne = "New Title 1";
+        String newTitleTwo = "New Title 2";
 
-        // Админ получает связь по ID
-        ResponseEntity<String> response = executeGet(endpoint, String.class,
+        Map<String, Object> requestOne = Map.of(
+                "title", newTitleOne
+        );
+
+        Map<String, Object> requestTwo = Map.of(
+                "title", newTitleTwo
+        );
+
+        // Попытка изменить урок без авторизации
+        ResponseEntity<String> response = executePut(endpoint, requestOne, String.class,
+                null, null);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+        // Попытка изменить урок от пользователя
+        response = executePut(endpoint, requestOne, String.class,
+                UserUsername, UserPassword);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        // Попытка изменить урок от учителя
+        response = executePut(endpoint, requestOne, String.class,
+                TeacherUsername, TeacherPassword);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertThat(responseBody.get("title").toString()).isEqualTo(newTitleOne);
+
+        // Попытка изменить урок от админа на несуществующем модуле
+        response = executePut(wrongEndpoint, requestTwo, String.class,
                 AdminUsername, AdminPassword);
-
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
-        // Пользователь получает связь по ID
-        response = executeGet(endpoint, String.class,
-                UserUsername, UserPassword);
-
+        // Попытка изменить урок от админа
+        response = executePut(endpoint, requestTwo, String.class,
+                AdminUsername, AdminPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // Получение связи по ID без авторизации
-        response = executeGet(endpoint, String.class,
-                null, null);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertThat(responseBody.get("title").toString()).isEqualTo(newTitleTwo);
     }
 
     @Test
     @Order(5)
-    @DisplayName("4. PUT /api/enrollments/{id} - обновить статус связи (только для ADMIN)")
-    void updateEnrollmentStatus_AdminAccess_ShouldReturnOk() throws JsonProcessingException {
+    @DisplayName("5. DELETE /api/lessons/{id} - удалить урок по ID (только для ADMIN)")
+    void deleteEnrollment_AdminTeacherAccess_ShouldReturnOk() {
         String endpoint = baseEndpoint + "/" + testId;
-        String wrongEndpoint = baseEndpoint + "/" + (testId + 1);
-        String newStatus = "COMPLETED";
-
-        Map<String, Object> request = Map.of(
-                "status", newStatus
-        );
-
-        // Попытка изменить статус без авторизации
-        ResponseEntity<String> response = executePut(endpoint, request, String.class,
-                null, null);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-
-        // Попытка изменить статус от пользователя
-        response = executePut(endpoint, request, String.class,
-                UserUsername, UserPassword);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-
-        // Попытка изменить статус от учителя
-        response = executePut(endpoint, request, String.class,
-                TeacherUsername, TeacherPassword);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-
-        // Попытка изменить статус от админа на несуществующей связи
-        response = executePut(wrongEndpoint, request, String.class,
-                AdminUsername, AdminPassword);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-
-        // Попытка изменить статус от админа
-        response = executePut(endpoint, request, String.class,
-                AdminUsername, AdminPassword);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        assertThat(responseBody.get("status").toString()).isEqualTo(newStatus);
-    }
-
-    @Test
-    @Order(6)
-    @DisplayName("5. DELETE /api/enrollments/{id} - удалить связь по ID (только для ADMIN)")
-    void deleteEnrollment_AdminAccess_ShouldReturnOk() {
-        String endpoint = baseEndpoint + "/" + testId;
+        String secondEndpoint = baseEndpoint + "/" + (testId - 1);
         String wrongEndpoint = baseEndpoint + "/" + (testId + 1);
 
-        // Попытка удалить связь без авторизации
+        // Попытка удалить урок без авторизации
         ResponseEntity<String> response = executeDelete(endpoint, String.class,
                 null, null);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
-        // Попытка удалить связь под пользователем
+        // Попытка удалить урок под пользователем
         response = executeDelete(endpoint, String.class,
                 UserUsername, UserPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
 
-        // Попытка удалить связь под учителем
-        response = executeDelete(endpoint, String.class,
+        // Попытка удалить урок под учителем
+        response = executeDelete(secondEndpoint, String.class,
                 TeacherUsername, TeacherPassword);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        // Попытка удалить несуществующую связь
+        // Попытка удалить несуществующую урок
         response = executeDelete(wrongEndpoint, String.class,
                 AdminUsername, AdminPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
-        // Попытка удалить связь под админом
+        // Попытка удалить урок под админом
         response = executeDelete(endpoint, String.class,
                 AdminUsername, AdminPassword);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
-
 }

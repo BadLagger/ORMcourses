@@ -98,6 +98,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/lessons/**").authenticated()
                         .requestMatchers("/api/assignments/**").authenticated()
                         .requestMatchers("/api/quizzes/**").authenticated()
+                        .requestMatchers("/api/submissions/**").authenticated()
 
                         // Public access (read-only)
                         .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
